@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2021 Camptocamp SA
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="view_picking_form" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form" />
+        <field name="arch" type="xml">
+            <xpath
+                expr="//field[@name='move_ids_without_package']/tree/button[@name='action_show_details']"
+                position="before"
+            >
+                <field
+                    name="shipment_advice_id"
+                    attrs="{'column_invisible': [('parent.picking_type_code', 'not in', ['incoming', 'outgoing'])]}"
+                    optional="show"
+                />
+            </xpath>
+        </field>
+    </record>
+    <record id="view_picking_internal_search" model="ir.ui.view">
+        <field name="name">stock.picking.search.inherit</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_internal_search" />
+        <field name="arch" type="xml">
+            <group position="before">
+                <separator />
+                <field
+                    name="planned_shipment_advice_id"
+                    string="Planned Shipment Advice"
+                    filter_domain="[('planned_shipment_advice_id', 'ilike', self)]"
+                />
+                <filter
+                    name="loaded_shipment_advice"
+                    string="Loaded Shipment Advice"
+                    domain="[('move_line_ids.shipment_advice_id', '=', self)]"
+                />
+                <filter
+                    name="no_shipment_advice"
+                    string="To plan in Shipment Advice"
+                    domain="['|', ('move_lines.shipment_advice_id', '=', False), ('move_line_ids.shipment_advice_id', '=', False)]"
+                />
+            </group>
+            <group position="inside">
+                <filter
+                    name="planned_shipment_advice"
+                    string="Planned Shipment Advice"
+                    domain="[]"
+                    context="{'group_by': 'planned_shipment_advice_id'}"
+                />
+            </group>
+        </field>
+    </record>
+</odoo>
