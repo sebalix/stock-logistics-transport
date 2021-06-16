@@ -27,4 +27,24 @@
             </group>
         </field>
     </record>
+    <record id="wizard_plan_shipment_move_action" model="ir.actions.act_window">
+        <field name="name">Plan in shipment</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">wizard.plan.shipment</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="groups_id" eval="[(4,ref('stock.group_stock_user'))]" />
+        <field name="binding_model_id" ref="stock.model_stock_move" />
+        <field name="binding_view_types">list</field>
+    </record>
+    <record id="wizard_unplan_shipment_move_action" model="ir.actions.act_window">
+        <field name="name">Unplan from shipment</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">wizard.unplan.shipment</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="groups_id" eval="[(4,ref('stock.group_stock_user'))]" />
+        <field name="binding_model_id" ref="stock.model_stock_move" />
+        <field name="binding_view_types">list</field>
+    </record>
 </odoo>
