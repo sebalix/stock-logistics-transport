@@ -108,11 +108,13 @@ class ShipmentAdvice(models.Model):
         },
         readonly=True,
     )
+    planned_moves_count = fields.Integer(compute="_compute_count")
     planned_picking_ids = fields.One2many(
         comodel_name="stock.picking",
         compute="_compute_picking_ids",
         string="Planned transfers",
     )
+    planned_pickings_count = fields.Integer(compute="_compute_count")
     loaded_move_line_ids = fields.One2many(
         comodel_name="stock.move.line",
         inverse_name="shipment_advice_id",
@@ -160,6 +162,12 @@ class ShipmentAdvice(models.Model):
             shipment.loaded_package_ids = (
                 shipment.loaded_move_line_ids.result_package_id
             )
+
+    @api.depends("planned_picking_ids", "planned_move_ids")
+    def _compute_count(self):
+        for shipment in self:
+            shipment.planned_pickings_count = len(self.planned_picking_ids)
+            shipment.planned_moves_count = len(self.planned_move_ids)
 
     @api.model
     def create(self, vals):
@@ -257,15 +265,17 @@ class ShipmentAdvice(models.Model):
             shipment.state = "draft"
 
     def button_open_planned_pickings(self):
-        # TODO
-        pass
+        action = self.env.ref("stock.action_picking_tree_all").read()[0]
+        action["domain"] = [("id", "in", self.planned_picking_ids.ids)]
+        return action
 
     def button_open_planned_moves(self):
         action = self.env.ref("stock.stock_move_action").read()[0]
         action["views"] = [
             (self.env.ref("stock.view_picking_move_tree").id, "tree"),
         ]
-        action["domain"] = [("shipment_advice_id", "in", self.ids)]
+        action["domain"] = [("id", "in", self.planned_move_ids.ids)]
+        action["context"] = {}  # Disable filters
         return action
 
     def button_open_loaded_pickings(self):

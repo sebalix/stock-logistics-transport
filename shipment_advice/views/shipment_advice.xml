@@ -54,28 +54,35 @@
                         <button
                             name="button_open_planned_pickings"
                             type="object"
-                            string="Planned Transfers"
                             class="oe_stat_button"
-                            icon="fa-arrows-v"
+                            icon="fa-clock-o"
                             attrs="{'invisible': [('planned_picking_ids', '=', [])]}"
-                        />
+                        >
+                            <field
+                                string="Transfers"
+                                name="planned_pickings_count"
+                                widget="statinfo"
+                            />
+                        </button>
                         <button
                             name="button_open_planned_moves"
                             type="object"
                             class="oe_stat_button"
-                            icon="fa-arrows-v"
+                            icon="fa-truck-o"
                             attrs="{'invisible': [('planned_move_ids', '=', [])]}"
                         >
-                            <div class="o_form_field o_stat_info">
-                                <span class="o_stat_text">Planned Content List</span>
-                            </div>
+                            <field
+                                string="Content List"
+                                name="planned_moves_count"
+                                widget="statinfo"
+                            />
                         </button>
                         <button
                             name="button_open_loaded_pickings"
                             type="object"
                             string="Transfers"
                             class="oe_stat_button"
-                            icon="fa-arrows-v"
+                            icon="fa-truck"
                             attrs="{'invisible': ['|', ('shipment_type', '!=', 'outgoing'), ('loaded_picking_ids', '=', [])]}"
                         />
                         <button
@@ -83,7 +90,7 @@
                             type="object"
                             string="Content List"
                             class="oe_stat_button"
-                            icon="fa-arrows-v"
+                            icon="fa-truck"
                             attrs="{'invisible': ['|', ('shipment_type', '!=', 'outgoing'), ('loaded_move_line_ids', '=', [])]}"
                         />
                         <button
@@ -91,7 +98,7 @@
                             type="object"
                             string="Packages"
                             class="oe_stat_button"
-                            icon="fa-arrows-v"
+                            icon="fa-truck"
                             attrs="{'invisible': ['|', ('shipment_type', '!=', 'outgoing'), ('loaded_package_ids', '=', [])]}"
                         />
                         <button
@@ -99,7 +106,7 @@
                             type="object"
                             string="Loading Progress"
                             class="oe_stat_button"
-                            icon="fa-arrows-v"
+                            icon="fa-tasks"
                             attrs="{'invisible': ['|', ('shipment_type', '!=', 'outgoing'), ('state', '!=', 'in_progress'), ('loaded_picking_ids', '=', [])]}"
                         />
                     </div>
@@ -125,19 +132,9 @@
                             <field name="ref" />
                         </group>
                     </group>
+                    <field name="planned_move_ids" invisible="1" />
+                    <field name="planned_picking_ids" invisible="1" />
                     <notebook>
-                        <page string="Planned content list">
-                            <group name="planned_moves" string="Planned moves">
-                                <field
-                                    name="planned_move_ids"
-                                    nolabel="1"
-                                    domain="[('picking_type_id.code', '=', shipment_type)]"
-                                />
-                            </group>
-                            <group name="planned_pickings" string="Planned transfers">
-                                <field name="planned_picking_ids" nolabel="1" />
-                            </group>
-                        </page>
                         <page string="Loaded content list">
                             <group name="loaded_move_lines" string="Loaded move lines">
                                 <field
@@ -147,7 +144,11 @@
                                 />
                             </group>
                             <group name="loaded_pickings" string="Loaded transfers">
-                                <field name="loaded_picking_ids" nolabel="1" />
+                                <field
+                                    name="loaded_picking_ids"
+                                    nolabel="1"
+                                    context="{'tree_view_ref': 'shipment_advice.stock_picking_limited_view_tree'}"
+                                />
                             </group>
                             <group name="loaded_packages" string="Loaded packages">
                                 <field name="loaded_package_ids" nolabel="1" />

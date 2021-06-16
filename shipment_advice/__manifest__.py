@@ -19,6 +19,7 @@
         "views/stock_package_level.xml",
         "views/stock_move.xml",
         "views/stock_move_line.xml",
+        "wizards/plan_in_shipment.xml",
     ],
     "demo": ["demo/stock_dock.xml"],
     "license": "AGPL-3",
