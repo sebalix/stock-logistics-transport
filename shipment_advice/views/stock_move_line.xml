@@ -45,6 +45,30 @@
                     attrs="{'column_invisible': [('parent.picking_type_code', '!=', 'outgoing')]}"
                 />
             </field>
+            <field name="product_uom_id" position="after">
+                <field name="picking_code" invisible="1" />
+                <button
+                    name="button_load_in_shipment"
+                    type="object"
+                    icon="fa-truck"
+                    title="Load in shipment"
+                    attrs="{'invisible': ['|', ('shipment_advice_id', '!=', False), ('picking_code', '!=', 'outgoing')]}"
+                />
+            </field>
+        </field>
+    </record>
+    <record id="stock_move_line_limited_view_tree" model="ir.ui.view">
+        <field name="name">stock.move.line.limited.tree</field>
+        <field name="model">stock.move.line</field>
+        <field name="priority" eval="100" />
+        <field name="arch" type="xml">
+            <tree string="Products" create="0">
+                <field name="product_id" />
+                <field name="lot_id" />
+                <field name="product_uom_qty" />
+                <field name="qty_done" />
+                <field name="product_uom_id" />
+            </tree>
         </field>
     </record>
 </odoo>

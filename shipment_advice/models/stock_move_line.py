@@ -13,3 +13,10 @@ class StockMoveLine(models.Model):
         string="Shipment advice",
         index=True,
     )
+
+    def button_load_in_shipment(self):
+        action = self.env.ref(
+            "shipment_advice.wizard_load_shipment_picking_action"
+        ).read()[0]
+        action["context"] = {"active_model": self._name, "active_ids": self.ids}
+        return action

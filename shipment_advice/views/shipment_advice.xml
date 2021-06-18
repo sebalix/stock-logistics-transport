@@ -99,7 +99,7 @@
                             class="oe_stat_button"
                             icon="fa-truck"
                             states="in_progress"
-                            attrs="{'invisible': ['|', ('shipment_type', '!=', 'outgoing'), ('loaded_move_line_ids', '=', [])]}"
+                            attrs="{'invisible': ['|', ('shipment_type', '!=', 'outgoing'), ('loaded_move_line_without_package_ids', '=', [])]}"
                         >
                             <field
                                 string="Content List"
@@ -156,8 +156,22 @@
                     <field name="planned_picking_ids" invisible="1" />
                     <field name="planned_move_ids" invisible="1" />
                     <field name="loaded_picking_ids" invisible="1" />
-                    <field name="loaded_move_line_ids" invisible="1" />
-                    <field name="loaded_package_ids" invisible="1" />
+                    <notebook>
+                        <page string="Loaded content list">
+                            <group
+                                name="loaded_move_lines_without_package"
+                                string="Bulk content"
+                            >
+                                <field
+                                    name="loaded_move_line_without_package_ids"
+                                    nolabel="1"
+                                />
+                            </group>
+                            <group name="loaded_packages" string="Package content">
+                                <field name="loaded_package_ids" nolabel="1" />
+                            </group>
+                        </page>
+                    </notebook>
                     <group class="oe_right" name="total_load">
                         <div class="oe_subtotal_footer_separator oe_inline o_td_label">
                             <label for="total_load" />
