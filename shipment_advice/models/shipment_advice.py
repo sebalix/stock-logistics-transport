@@ -126,16 +126,31 @@ class ShipmentAdvice(models.Model):
         },
         readonly=True,
     )
+    loaded_move_line_without_package_ids = fields.One2many(
+        comodel_name="stock.move.line",
+        inverse_name="shipment_advice_id",
+        string="Loaded content list (w/o packages)",
+        states={
+            "draft": [("readonly", False)],
+            "confirmed": [("readonly", False)],
+            "in_progress": [("readonly", False)],
+        },
+        domain=[("package_level_id", "=", False)],
+        readonly=True,
+    )
+    loaded_move_lines_without_package_count = fields.Integer(compute="_compute_count")
     loaded_picking_ids = fields.One2many(
         comodel_name="stock.picking",
         compute="_compute_picking_ids",
         string="Loaded transfers",
     )
+    loaded_pickings_count = fields.Integer(compute="_compute_count")
     loaded_package_ids = fields.One2many(
         comodel_name="stock.quant.package",
         compute="_compute_package_ids",
         string="Packages",
     )
+    loaded_packages_count = fields.Integer(compute="_compute_count")
 
     _sql_constraints = [
         (
@@ -168,6 +183,11 @@ class ShipmentAdvice(models.Model):
         for shipment in self:
             shipment.planned_pickings_count = len(self.planned_picking_ids)
             shipment.planned_moves_count = len(self.planned_move_ids)
+            shipment.loaded_pickings_count = len(self.loaded_picking_ids)
+            shipment.loaded_move_lines_without_package_count = len(
+                self.loaded_move_line_without_package_ids
+            )
+            shipment.loaded_packages_count = len(self.loaded_package_ids)
 
     @api.model
     def create(self, vals):
@@ -279,16 +299,19 @@ class ShipmentAdvice(models.Model):
         return action
 
     def button_open_loaded_pickings(self):
-        # TODO
-        pass
+        action = self.env.ref("stock.action_picking_tree_all").read()[0]
+        action["domain"] = [("id", "in", self.loaded_picking_ids.ids)]
+        return action
 
     def button_open_loaded_move_lines(self):
-        # TODO
-        pass
+        action = self.env.ref("stock.stock_move_line_action").read()[0]
+        action["domain"] = [("id", "in", self.loaded_move_line_without_package_ids.ids)]
+        return action
 
     def button_open_loaded_packages(self):
-        # TODO
-        pass
+        action = self.env.ref("stock.action_package_view").read()[0]
+        action["domain"] = [("id", "in", self.loaded_package_ids.ids)]
+        return action
 
     def button_open_deliveries_in_progress(self):
         # TODO

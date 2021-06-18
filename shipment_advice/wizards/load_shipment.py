@@ -77,7 +77,11 @@ class WizardLoadInShipment(models.TransientModel):
     def action_load(self):
         """Load the selected records in the selected shipment."""
         self.ensure_one()
-        self.picking_ids.move_line_ids.shipment_advice_id = self.shipment_advice_id
+        for move_line in self.picking_ids.move_line_ids:
+            move_line.shipment_advice_id = self.shipment_advice_id
+            move_line.qty_done = move_line.product_uom_qty
+        for package_level in self.picking_ids.package_level_ids:
+            package_level.is_done = True
         if self.shipment_advice_id.state == "confirmed":
             self.shipment_advice_id.action_in_progress()
         action = self.env.ref("shipment_advice.shipment_advice_action").read()[0]

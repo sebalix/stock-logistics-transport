@@ -7,6 +7,16 @@
         <field name="model">stock.picking</field>
         <field name="inherit_id" ref="stock.view_picking_form" />
         <field name="arch" type="xml">
+            <header position="inside">
+                <field name="is_loaded_in_shipment" invisible="1" />
+                <button
+                    name="button_load_in_shipment"
+                    type="object"
+                    string="Load in shipment"
+                    class="btn-primary"
+                    attrs="{'invisible': ['|', ('is_loaded_in_shipment', '=', True), ('picking_type_code', '!=', 'outgoing')]}"
+                />
+            </header>
             <xpath
                 expr="//field[@name='move_ids_without_package']/tree/button[@name='action_show_details']"
                 position="before"
@@ -17,6 +27,9 @@
                     optional="show"
                 />
             </xpath>
+            <group name="other_infos" position="inside">
+                <field name="planned_shipment_advice_id" />
+            </group>
         </field>
     </record>
     <record id="vpicktree" model="ir.ui.view">
