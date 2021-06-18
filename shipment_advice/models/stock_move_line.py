@@ -8,5 +8,8 @@ class StockMoveLine(models.Model):
     _inherit = "stock.move.line"
 
     shipment_advice_id = fields.Many2one(
-        comodel_name="shipment.advice", ondelete="set null", string="Shipment advice",
+        comodel_name="shipment.advice",
+        ondelete="set null",
+        string="Shipment advice",
+        index=True,
     )

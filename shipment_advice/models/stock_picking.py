@@ -11,4 +11,5 @@ class StockPicking(models.Model):
         comodel_name="shipment.advice",
         related="move_lines.shipment_advice_id",
         store=True,
+        index=True,
     )
