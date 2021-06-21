@@ -135,7 +135,11 @@ class ShipmentAdvice(models.Model):
             "confirmed": [("readonly", False)],
             "in_progress": [("readonly", False)],
         },
-        domain=[("package_level_id", "=", False)],
+        domain=[
+            "|",
+            ("package_level_id", "=", False),
+            ("picking_type_entire_packs", "=", False),
+        ],
         readonly=True,
     )
     loaded_move_lines_without_package_count = fields.Integer(compute="_compute_count")
@@ -163,7 +167,8 @@ class ShipmentAdvice(models.Model):
     @api.depends("loaded_package_ids")
     def _compute_total_load(self):
         for shipment in self:
-            shipment.total_load = 0.0  # TODO
+            packages = self.loaded_move_line_ids.result_package_id
+            shipment.total_load = sum(packages.mapped("shipping_weight"))
 
     @api.depends("planned_move_ids", "loaded_move_line_ids")
     def _compute_picking_ids(self):
@@ -171,11 +176,18 @@ class ShipmentAdvice(models.Model):
             shipment.planned_picking_ids = shipment.planned_move_ids.picking_id
             shipment.loaded_picking_ids = shipment.loaded_move_line_ids.picking_id
 
-    @api.depends("loaded_move_line_ids")
+    @api.depends(
+        "loaded_move_line_ids.result_package_id",
+        "loaded_move_line_ids.picking_type_entire_packs",
+    )
     def _compute_package_ids(self):
         for shipment in self:
-            shipment.loaded_package_ids = (
-                shipment.loaded_move_line_ids.result_package_id
+            package_ids = set()
+            for line in shipment.loaded_move_line_ids:
+                if line.result_package_id and line.picking_type_entire_packs:
+                    package_ids.add(line.result_package_id.id)
+            shipment.loaded_package_ids = self.env["stock.quant.package"].browse(
+                package_ids
             )
 
     @api.depends("planned_picking_ids", "planned_move_ids")
@@ -306,6 +318,7 @@ class ShipmentAdvice(models.Model):
     def button_open_loaded_move_lines(self):
         action = self.env.ref("stock.stock_move_line_action").read()[0]
         action["domain"] = [("id", "in", self.loaded_move_line_without_package_ids.ids)]
+        action["context"] = {}  # Disable filters
         return action
 
     def button_open_loaded_packages(self):

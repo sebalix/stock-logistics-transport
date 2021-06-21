@@ -18,5 +18,15 @@ class StockMoveLine(models.Model):
         action = self.env.ref(
             "shipment_advice.wizard_load_shipment_picking_action"
         ).read()[0]
-        action["context"] = {"active_model": self._name, "active_ids": self.ids}
+        action["context"] = {
+            "active_model": self._name,
+            "active_ids": self.ids,
+            "default_open_shipment": self.env.context.get("open_shipment", True),
+        }
         return action
+
+    def _load_in_shipment(self, shipment_advice):
+        """Load the move lines into the given shipment advice."""
+        for move_line in self:
+            move_line.shipment_advice_id = shipment_advice.id
+            move_line.qty_done = move_line.product_uom_qty

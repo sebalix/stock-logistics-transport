@@ -10,10 +10,13 @@ class WizardLoadInShipment(models.TransientModel):
     _description = "Load shipment"
 
     picking_ids = fields.Many2many(
-        comodel_name="stock.picking", string="Transfers to plan",
+        comodel_name="stock.picking", string="Transfers to load",
     )
     move_line_ids = fields.Many2many(
-        comodel_name="stock.move.line", string="Products to plan"
+        comodel_name="stock.move.line", string="Products to load"
+    )
+    package_level_ids = fields.Many2many(
+        comodel_name="stock.package_level", string="Packages to load"
     )
     shipment_advice_id = fields.Many2one(
         comodel_name="shipment.advice",
@@ -22,6 +25,7 @@ class WizardLoadInShipment(models.TransientModel):
         domain=[("state", "in", ("confirm", "in_progress"))],
     )
     warning = fields.Char(string="Warning", readonly=True)
+    open_shipment = fields.Boolean(default=True)
 
     @api.model
     def default_get(self, fields_list):
@@ -82,6 +86,28 @@ class WizardLoadInShipment(models.TransientModel):
             res["shipment_advice_id"] = fields.first(
                 lines_to_keep.move_id.shipment_advice_id
             ).id
+        if active_model == "stock.package_level" and active_ids:
+            package_levels = self.env[active_model].browse(active_ids)
+            # We keep only deliveries and receptions not canceled/done
+            package_levels_to_keep = package_levels.filtered_domain(
+                [("state", "=", "assigned"), ("picking_type_code", "=", "outgoing")]
+            )
+            res["package_level_ids"] = package_levels.ids
+            if not package_levels_to_keep:
+                res["warning"] = _(
+                    "No package to load among selected ones (already done or "
+                    "not qualified as delivery)."
+                )
+            elif package_levels != package_levels_to_keep:
+                res["warning"] = _(
+                    "Packages to include have been updated, keeping only those "
+                    "qualified as delivery."
+                )
+            # Prefill the shipment with the planned one if any
+            res["shipment_advice_id"] = fields.first(
+                package_levels_to_keep.move_ids.shipment_advice_id
+                or package_levels_to_keep.move_line_ids.move_id.shipment_advice_id
+            ).id
         return res
 
     @api.onchange("shipment_advice_id")
@@ -121,23 +147,37 @@ class WizardLoadInShipment(models.TransientModel):
                 }
             )
         self.move_line_ids = lines
+        # Packages
+        package_levels = self.package_level_ids.filtered(
+            lambda o: o.picking_id.picking_type_code
+            == self.shipment_advice_id.shipment_type
+        )
+        res = {}
+        if self.package_level_ids != package_levels:
+            res.update(
+                warning={
+                    "title": _("Packages updated"),
+                    "message": _(
+                        "Packages to load have been updated "
+                        "to match the selected shipment type."
+                    ),
+                }
+            )
+        self.package_level_ids = package_levels
         return res
 
     def action_load(self):
         """Load the selected records in the selected shipment."""
         self.ensure_one()
-        # Load whole transfers
-        for move_line in self.picking_ids.move_line_ids:
-            move_line.shipment_advice_id = self.shipment_advice_id
-            move_line.qty_done = move_line.product_uom_qty
-        for package_level in self.picking_ids.package_level_ids:
-            package_level.is_done = True
-        # Load move lines
-        for move_line in self.move_line_ids:
-            move_line.shipment_advice_id = self.shipment_advice_id
-            move_line.qty_done = move_line.product_uom_qty
+        # Load whole transfers / move lines / package levels
+        self.picking_ids._load_in_shipment(self.shipment_advice_id)
+        self.move_line_ids._load_in_shipment(self.shipment_advice_id)
+        self.package_level_ids._load_in_shipment(self.shipment_advice_id)
+        # Update the shipment status if needed
         if self.shipment_advice_id.state == "confirmed":
             self.shipment_advice_id.action_in_progress()
-        action = self.env.ref("shipment_advice.shipment_advice_action").read()[0]
-        action["res_id"] = self.shipment_advice_id.id
-        return action
+        if self.open_shipment:
+            action = self.env.ref("shipment_advice.shipment_advice_action").read()[0]
+            action["res_id"] = self.shipment_advice_id.id
+            return action
+        return True

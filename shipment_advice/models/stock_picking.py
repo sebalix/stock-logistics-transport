@@ -31,3 +31,15 @@ class StockPicking(models.Model):
         ).read()[0]
         action["context"] = {"active_model": self._name, "active_ids": self.ids}
         return action
+
+    def button_unload_from_shipment(self):
+        action = self.env.ref(
+            "shipment_advice.wizard_unload_shipment_picking_action"
+        ).read()[0]
+        action["context"] = {"active_model": self._name, "active_ids": self.ids}
+        return action
+
+    def _load_in_shipment(self, shipment_advice):
+        """Load the whole transfers content into the given shipment advice."""
+        self.package_level_ids._load_in_shipment(shipment_advice)
+        self.move_line_ids._load_in_shipment(shipment_advice)

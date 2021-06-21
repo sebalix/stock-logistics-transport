@@ -43,7 +43,7 @@ class WizardUnplanShipment(models.TransientModel):
             if not pickings_to_keep:
                 res["warning"] = _(
                     "No transfer to unplan among selected ones (already done or "
-                    "not related to a shipment.)."
+                    "not related to a shipment)."
                 )
             elif pickings != pickings_to_keep:
                 res["warning"] = _(

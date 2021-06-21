@@ -12,35 +12,35 @@
                         name="action_confirm"
                         type="object"
                         string="Confirm"
-                        class="oe_highlight"
+                        class="btn-primary"
                         states="draft"
                     />
                     <button
                         name="action_in_progress"
                         type="object"
                         string="Start"
-                        class="oe_highlight"
+                        class="btn-primary"
                         states="confirmed"
                     />
                     <button
                         name="action_done"
                         type="object"
                         string="Mark as done"
-                        class="oe_highlight"
+                        class="btn-primary"
                         states="in_progress"
                     />
                     <button
                         name="action_cancel"
                         type="object"
                         string="Cancel"
-                        class="oe_highlight"
+                        class="btn-secondary"
                         states="confirmed,in_progress"
                     />
                     <button
                         name="action_draft"
                         type="object"
                         string="Back to draft"
-                        class="oe_highlight"
+                        class="btn-secondary"
                         states="cancel"
                     />
                     <field
@@ -165,7 +165,16 @@
                                 <field
                                     name="loaded_move_line_without_package_ids"
                                     nolabel="1"
-                                />
+                                >
+                                    <tree create="0">
+                                        <field name="product_id" />
+                                        <field name="lot_id" />
+                                        <field name="product_uom_qty" />
+                                        <field name="qty_done" />
+                                        <field name="product_uom_id" />
+                                        <field name="state" />
+                                    </tree>
+                                </field>
                             </group>
                             <group name="loaded_packages" string="Package content">
                                 <field name="loaded_package_ids" nolabel="1" />

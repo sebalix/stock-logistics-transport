@@ -36,8 +36,19 @@
                     />
                 </group>
                 <group
+                    name="packages"
+                    attrs="{'invisible': [('package_level_ids', '=', [])]}"
+                    string="Packages to load"
+                >
+                    <field
+                        name="package_level_ids"
+                        nolabel="1"
+                        context="{'tree_view_ref': 'shipment_advice.stock_package_level_limited_view_tree'}"
+                    />
+                </group>
+                <group
                     name="shipment"
-                    attrs="{'invisible': [('picking_ids', '=', []), ('move_line_ids', '=', [])]}"
+                    attrs="{'invisible': [('picking_ids', '=', []), ('move_line_ids', '=', []), ('package_level_ids', '=', [])]}"
                 >
                     <field name="shipment_advice_id" />
                 </group>
@@ -47,7 +58,7 @@
                         type="object"
                         string="Validate"
                         class="btn-primary"
-                        attrs="{'invisible': [('picking_ids', '=', []), ('move_line_ids', '=', [])]}"
+                        attrs="{'invisible': [('picking_ids', '=', []), ('move_line_ids', '=', []), ('package_level_ids', '=', [])]}"
                     />
                     <button special="cancel" string="Cancel" class="btn-default" />
                 </footer>
