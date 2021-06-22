@@ -54,5 +54,5 @@ class WizardUnloadShipment(models.TransientModel):
     def action_unload(self):
         """Unload the selected records from their related shipment."""
         self.ensure_one()
-        self.picking_ids.move_line_ids.shipment_advice_id = False
+        self.picking_ids._unload_from_shipment()
         return True

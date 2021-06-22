@@ -43,3 +43,8 @@ class StockPicking(models.Model):
         """Load the whole transfers content into the given shipment advice."""
         self.package_level_ids._load_in_shipment(shipment_advice)
         self.move_line_ids._load_in_shipment(shipment_advice)
+
+    def _unload_from_shipment(self):
+        """Unload the whole transfers content from their related shipment advice."""
+        self.package_level_ids._unload_from_shipment()
+        self.move_line_ids._unload_from_shipment()
