@@ -26,9 +26,27 @@ class StockMoveLine(models.Model):
         }
         return action
 
+    def _check_entire_package(self):
+        """Check that the lines represent whole packages (if applicable)."""
+        for move_line in self:
+            if move_line.picking_type_entire_packs and move_line.package_level_id:
+                package_lines = move_line.package_level_id.move_line_ids
+                if package_lines not in self:
+                    return False
+        return True
+
     def _load_in_shipment(self, shipment_advice):
         """Load the move lines into the given shipment advice."""
+        # Entire package check
+        if not self._check_entire_package():
+            raise UserError(
+                _(
+                    "You cannot load this move line alone, you have to "
+                    "move the whole package content."
+                )
+            )
         for move_line in self:
+            # Shipment has to be the planned one (if any)
             planned_shipment = move_line.move_id.shipment_advice_id
             if planned_shipment and planned_shipment != shipment_advice:
                 raise UserError(
@@ -37,6 +55,8 @@ class StockMoveLine(models.Model):
                         "planned to be loaded in {}"
                     ).format(planned_shipment.name)
                 )
+            # If no planned shipment, allow the loading only if the shipment
+            # is not a planned one
             elif not planned_shipment and shipment_advice.planned_move_ids:
                 raise UserError(
                     _(
@@ -49,4 +69,12 @@ class StockMoveLine(models.Model):
 
     def _unload_from_shipment(self):
         """Unload the move lines from their related shipment advice."""
+        if not self._check_entire_package():
+            raise UserError(
+                _(
+                    "You cannot unload this move line alone, you have to "
+                    "unload the whole package content."
+                )
+            )
         self.shipment_advice_id = False
+        self.qty_done = 0

@@ -65,13 +65,11 @@ class WizardLoadInShipment(models.TransientModel):
         if active_model == "stock.move.line" and active_ids:
             lines = self.env[active_model].browse(active_ids)
             # We keep only deliveries not canceled/done
-            package_lines = lines.filtered_domain([("package_level_id", "!=", False)])
-            lines_of_packages = package_lines.package_level_id.move_line_ids
-            if package_lines != lines_of_packages:
+            if not lines._check_entire_package():
                 raise UserError(
                     _(
                         "You cannot load move lines which are part of a package, "
-                        "unless to select all the move lines related to this package."
+                        "unless you select all the move lines related to this package."
                     )
                 )
             lines_to_keep = lines.filtered_domain(
