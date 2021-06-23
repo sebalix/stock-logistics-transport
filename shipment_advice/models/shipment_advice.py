@@ -135,11 +135,7 @@ class ShipmentAdvice(models.Model):
             "confirmed": [("readonly", False)],
             "in_progress": [("readonly", False)],
         },
-        domain=[
-            "|",
-            ("package_level_id", "=", False),
-            ("picking_type_entire_packs", "=", False),
-        ],
+        domain=[("package_level_id", "=", False)],
         readonly=True,
     )
     loaded_move_lines_without_package_count = fields.Integer(compute="_compute_count")
@@ -176,16 +172,13 @@ class ShipmentAdvice(models.Model):
             shipment.planned_picking_ids = shipment.planned_move_ids.picking_id
             shipment.loaded_picking_ids = shipment.loaded_move_line_ids.picking_id
 
-    @api.depends(
-        "loaded_move_line_ids.result_package_id",
-        "loaded_move_line_ids.picking_type_entire_packs",
-    )
+    @api.depends("loaded_move_line_ids.result_package_id",)
     def _compute_package_ids(self):
         for shipment in self:
             package_ids = set()
             for line in shipment.loaded_move_line_ids:
-                if line.result_package_id and line.picking_type_entire_packs:
-                    package_ids.add(line.result_package_id.id)
+                if line.package_level_id:
+                    package_ids.add(line.package_level_id.package_id.id)
             shipment.loaded_package_ids = self.env["stock.quant.package"].browse(
                 package_ids
             )

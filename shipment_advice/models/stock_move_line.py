@@ -29,9 +29,9 @@ class StockMoveLine(models.Model):
     def _check_entire_package(self):
         """Check that the lines represent whole packages (if applicable)."""
         for move_line in self:
-            if move_line.picking_type_entire_packs and move_line.package_level_id:
+            if move_line.package_level_id:
                 package_lines = move_line.package_level_id.move_line_ids
-                if package_lines not in self:
+                if not set(package_lines.ids).issubset(set(self.ids)):
                     return False
         return True
 

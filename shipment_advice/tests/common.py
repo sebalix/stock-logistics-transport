@@ -10,33 +10,69 @@ class Common(SavepointCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.env = cls.env(context=dict(cls.env.context, tracking_disable=True))
+        # Configuration
+        cls.dock = cls.env.ref("shipment_advice.stock_dock_demo")
+        cls.picking_type_out = cls.env.ref("stock.picking_type_out")
+        cls.picking_type_out.default_location_dest_id = cls.env.ref(
+            "stock.stock_location_customers"
+        )
+        # Shipment
         cls.shipment_advice_in = cls.env["shipment.advice"].create(
             {"shipment_type": "incoming"}
         )
         cls.shipment_advice_out = cls.env["shipment.advice"].create(
             {"shipment_type": "outgoing"}
         )
-        cls.dock = cls.env.ref("shipment_advice.stock_dock_demo")
+        # Products
         cls.product_in = cls.env.ref("product.product_delivery_01")
-        cls.product_out = cls.env.ref("product.product_delivery_02")
+        cls.product_out1 = cls.env.ref("product.consu_delivery_01")
+        cls.product_out2 = cls.env.ref("product.consu_delivery_02")
+        cls.product_out3 = cls.env.ref("product.consu_delivery_03")
         cls.picking_type_in = cls.env.ref("stock.picking_type_in")
         cls.picking_type_in.default_location_src_id = cls.env.ref(
             "stock.stock_location_suppliers"
         )
-        cls.picking_type_out = cls.env.ref("stock.picking_type_out")
-        cls.picking_type_out.default_location_dest_id = cls.env.ref(
-            "stock.stock_location_customers"
+        # Stock levels
+        cls._update_qty_in_location(
+            cls.picking_type_out.default_location_src_id, cls.product_out1, 20,
         )
-        cls.env["stock.quant"]._update_available_quantity(
-            cls.product_out, cls.picking_type_out.default_location_src_id, 20.0,
+        cls.package = cls.env["stock.quant.package"].create({"name": "PKG_OUT2"})
+        cls._update_qty_in_location(
+            cls.picking_type_out.default_location_src_id,
+            cls.product_out2,
+            10,
+            package=cls.package,
         )
+        cls._update_qty_in_location(
+            cls.picking_type_out.default_location_src_id,
+            cls.product_out3,
+            10,
+            package=cls.package,
+        )
+        # Moves & transfers
         cls.move_in = cls._create_move(cls.picking_type_in, cls.product_in, 10)
         cls.group = cls.env["procurement.group"].create({})
-        cls.move_out1 = cls._create_move(
-            cls.picking_type_out, cls.product_out, 10, cls.group
+        cls.move_product_out1 = cls._create_move(
+            cls.picking_type_out, cls.product_out1, 20, cls.group
         )
-        cls.move_out2 = cls._create_move(
-            cls.picking_type_out, cls.product_out, 10, cls.group
+        cls.move_product_out2 = cls._create_move(
+            cls.picking_type_out, cls.product_out2, 10, cls.group
+        )
+        cls.move_product_out3 = cls._create_move(
+            cls.picking_type_out, cls.product_out3, 10, cls.group
+        )
+
+    @classmethod
+    def _update_qty_in_location(
+        cls, location, product, quantity, package=None, lot=None
+    ):
+        quants = cls.env["stock.quant"]._gather(
+            product, location, lot_id=lot, package_id=package, strict=True
+        )
+        # this method adds the quantity to the current quantity, so remove it
+        quantity -= sum(quants.mapped("quantity"))
+        cls.env["stock.quant"]._update_available_quantity(
+            product, location, quantity, package_id=package, lot_id=lot
         )
 
     @classmethod
@@ -101,18 +137,20 @@ class Common(SavepointCase):
         wiz.action_plan()
         return wiz
 
-    def _load_pickings_in_shipment(self, shipment_advice, pickings):
+    def _load_records_in_shipment(self, shipment_advice, records):
+        """Load pickings, move lines or package levels in the givent shipment."""
         wiz_model = self.env["wizard.load.shipment"].with_context(
-            active_model=pickings._name, active_ids=pickings.ids,
+            active_model=records._name, active_ids=records.ids,
         )
         wiz = wiz_model.create({"shipment_advice_id": shipment_advice.id})
         wiz.action_load()
         return wiz
 
-    def _load_move_lines_in_shipment(self, shipment_advice, move_lines):
-        wiz_model = self.env["wizard.load.shipment"].with_context(
-            active_model=move_lines._name, active_ids=move_lines.ids,
+    def _unload_records_from_shipment(self, shipment_advice, records):
+        """Unload pickings, move lines or package levels from the givent shipment."""
+        wiz_model = self.env["wizard.unload.shipment"].with_context(
+            active_model=records._name, active_ids=records.ids,
         )
-        wiz = wiz_model.create({"shipment_advice_id": shipment_advice.id})
-        wiz.action_load()
+        wiz = wiz_model.create({})
+        wiz.action_unload()
         return wiz

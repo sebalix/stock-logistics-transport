@@ -78,7 +78,7 @@ class WizardLoadInShipment(models.TransientModel):
                     ("picking_id.picking_type_id.code", "=", "outgoing"),
                 ]
             )
-            res["move_line_ids"] = lines.ids
+            res["move_line_ids"] = lines_to_keep.ids
             if not lines_to_keep:
                 res["warning"] = _(
                     "No product to load among selected ones (already done or "
@@ -97,9 +97,12 @@ class WizardLoadInShipment(models.TransientModel):
             package_levels = self.env[active_model].browse(active_ids)
             # We keep only deliveries and receptions not canceled/done
             package_levels_to_keep = package_levels.filtered_domain(
-                [("state", "=", "assigned"), ("picking_type_code", "=", "outgoing")]
+                [
+                    ("state", "not in", ("done", "cancel")),
+                    ("picking_type_code", "=", "outgoing"),
+                ]
             )
-            res["package_level_ids"] = package_levels.ids
+            res["package_level_ids"] = package_levels_to_keep.ids
             if not package_levels_to_keep:
                 res["warning"] = _(
                     "No package to load among selected ones (already done or "
