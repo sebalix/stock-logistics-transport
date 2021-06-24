@@ -40,6 +40,8 @@
                 />
                 <field name="state" />
                 <field name="is_done" />
+                <field name="package_shipping_weight" />
+                <field name="package_weight_uom_name" string=" " />
             </tree>
         </field>
     </record>

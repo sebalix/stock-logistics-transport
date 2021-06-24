@@ -8,7 +8,7 @@
     "author": "Camptocamp, Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/stock-logistics-transport",
     "category": "Warehouse Management",
-    "depends": ["stock"],
+    "depends": ["stock", "delivery"],
     "data": [
         "security/ir.model.access.csv",
         "data/ir_sequence.xml",

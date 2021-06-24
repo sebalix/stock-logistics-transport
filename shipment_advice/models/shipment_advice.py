@@ -150,7 +150,23 @@ class ShipmentAdvice(models.Model):
         compute="_compute_package_ids",
         string="Packages",
     )
+    loaded_package_level_ids = fields.One2many(
+        comodel_name="stock.package_level",
+        compute="_compute_package_ids",
+        string="Packages",
+    )
     loaded_packages_count = fields.Integer(compute="_compute_count")
+    carrier_ids = fields.Many2many(
+        comodel_name="delivery.carrier",
+        string="Related shipping methods",
+        compute="_compute_carrier_ids",
+        help=(
+            "Concerned shipping method  for this shipment advice. It can be "
+            "used to determine what are the eligible deliveries to load in "
+            "the shipment when you don't have planned content "
+            "(e.g. through the shopfloor application)."
+        ),
+    )
 
     _sql_constraints = [
         (
@@ -172,9 +188,12 @@ class ShipmentAdvice(models.Model):
             shipment.planned_picking_ids = shipment.planned_move_ids.picking_id
             shipment.loaded_picking_ids = shipment.loaded_move_line_ids.picking_id
 
-    @api.depends("loaded_move_line_ids.result_package_id",)
+    @api.depends("loaded_move_line_ids.package_level_id.package_id",)
     def _compute_package_ids(self):
         for shipment in self:
+            shipment.loaded_package_level_ids = (
+                shipment.loaded_move_line_ids.package_level_id
+            )
             package_ids = set()
             for line in shipment.loaded_move_line_ids:
                 if line.package_level_id:
@@ -193,6 +212,14 @@ class ShipmentAdvice(models.Model):
                 self.loaded_move_line_without_package_ids
             )
             shipment.loaded_packages_count = len(self.loaded_package_ids)
+
+    @api.depends("planned_picking_ids", "loaded_picking_ids")
+    def _compute_carrier_ids(self):
+        for shipment in self:
+            if shipment.planned_picking_ids:
+                shipment.carrier_ids = shipment.planned_picking_ids.carrier_id
+            else:
+                shipment.carrier_ids = shipment.loaded_picking_ids.carrier_id
 
     @api.model
     def create(self, vals):

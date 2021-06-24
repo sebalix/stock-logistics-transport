@@ -156,29 +156,33 @@
                     <field name="planned_picking_ids" invisible="1" />
                     <field name="planned_move_ids" invisible="1" />
                     <field name="loaded_picking_ids" invisible="1" />
+                    <field name="loaded_package_ids" invisible="1" />
                     <notebook>
-                        <page string="Loaded content list">
-                            <group
-                                name="loaded_move_lines_without_package"
-                                string="Bulk content"
-                            >
-                                <field
-                                    name="loaded_move_line_without_package_ids"
-                                    nolabel="1"
-                                >
-                                    <tree create="0">
-                                        <field name="product_id" />
-                                        <field name="lot_id" />
-                                        <field name="product_uom_qty" />
-                                        <field name="qty_done" />
-                                        <field name="product_uom_id" />
-                                        <field name="state" />
-                                    </tree>
-                                </field>
-                            </group>
-                            <group name="loaded_packages" string="Package content">
-                                <field name="loaded_package_ids" nolabel="1" />
-                            </group>
+                        <page
+                            string="Loaded content list"
+                            name="loaded_move_lines_without_package"
+                        >
+                            <span class="o_horizontal_separator">Bulk content</span>
+                            <field name="loaded_move_line_without_package_ids">
+                                <tree create="0">
+                                    <field name="picking_id" />
+                                    <field name="product_id" />
+                                    <field name="lot_id" />
+                                    <field name="product_uom_qty" />
+                                    <field name="qty_done" />
+                                    <field name="product_uom_id" />
+                                    <field name="state" />
+                                </tree>
+                            </field>
+                            <span class="o_horizontal_separator">Package content</span>
+                            <field
+                                name="loaded_package_level_ids"
+                                nolabel="1"
+                                context="{'tree_view_ref': 'shipment_advice.stock_package_level_limited_view_tree'}"
+                            />
+                        </page>
+                        <page name="carriers" string="Related shipping methods">
+                            <field name="carrier_ids" nolabel="1" />
                         </page>
                     </notebook>
                     <group class="oe_right" name="total_load">

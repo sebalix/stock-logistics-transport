@@ -28,11 +28,11 @@ class TestShipmentAdvice(Common):
         self.assertEqual(self.shipment_advice_out.state, "in_progress")
 
     def test_shipment_advice_incoming_done_full(self):
-        """Validating an incoming shipment should validate only the shipment
-        if all receptions have been fully received.
+        """Validating an incoming shipment validates automatically planned
+        transfers. Here the planned transfers have been fully received.
         """
-        picking = self.move_product_in.picking_id
-        self._plan_pickings_in_shipment(self.shipment_advice_in, picking)
+        picking = self.move_product_in1.picking_id
+        self._plan_records_in_shipment(self.shipment_advice_in, picking)
         self._in_progress_shipment_advice(self.shipment_advice_in)
         for ml in picking.move_line_ids:
             ml.qty_done = ml.product_uom_qty
@@ -46,6 +46,27 @@ class TestShipmentAdvice(Common):
             )
         )
         self.assertEqual(picking.state, "done")
+
+    def test_shipment_advice_incoming_done_partial(self):
+        """Validating an incoming shipment validates automatically planned
+        transfers. Here the planned transfers have been partially received.
+        """
+        picking = self.move_product_in1.picking_id
+        # Plan a move
+        self._plan_records_in_shipment(self.shipment_advice_in, self.move_product_in1)
+        self._in_progress_shipment_advice(self.shipment_advice_in)
+        # Receive it (making its related transfer partially received)
+        for ml in self.move_product_in1.move_line_ids:
+            ml.qty_done = ml.product_uom_qty
+        self.assertEqual(picking, self.move_product_in2.picking_id)
+        # When validating the shipment, a backorder is created for unprocessed moves
+        self.shipment_advice_in.action_done()
+        backorder = self.move_product_in2.picking_id
+        self.assertNotEqual(picking, backorder)
+        self.assertEqual(self.shipment_advice_in.state, "done")
+        self.assertEqual(self.move_product_in1.state, "done")
+        self.assertEqual(picking.state, "done")
+        self.assertEqual(backorder.state, "assigned")
 
     def test_shipment_advice_done_full(self):
         """Validating a shipment (whatever the backorder policy is) should

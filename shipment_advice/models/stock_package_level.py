@@ -8,6 +8,8 @@ class StockPackageLevel(models.Model):
     _inherit = "stock.package_level"
 
     shipment_advice_id = fields.Many2one(related="move_line_ids.shipment_advice_id")
+    package_shipping_weight = fields.Float(related="package_id.shipping_weight")
+    package_weight_uom_name = fields.Char(related="package_id.weight_uom_name")
 
     def button_load_in_shipment(self):
         action = self.env.ref(

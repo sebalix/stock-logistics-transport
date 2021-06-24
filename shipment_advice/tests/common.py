@@ -50,7 +50,8 @@ class Common(SavepointCase):
             package=cls.package,
         )
         # Moves & transfers
-        cls.move_product_in = cls._create_move(cls.picking_type_in, cls.product_in, 10)
+        cls.move_product_in1 = cls._create_move(cls.picking_type_in, cls.product_in, 5)
+        cls.move_product_in2 = cls._create_move(cls.picking_type_in, cls.product_in, 5)
         cls.group = cls.env["procurement.group"].create({})
         cls.move_product_out1 = cls._create_move(
             cls.picking_type_out, cls.product_out1, 20, cls.group
@@ -121,17 +122,9 @@ class Common(SavepointCase):
         shipment_advice.action_cancel()
         self.assertEqual(shipment_advice.state, "cancel")
 
-    def _plan_pickings_in_shipment(self, shipment_advice, pickings):
+    def _plan_records_in_shipment(self, shipment_advice, records):
         wiz_model = self.env["wizard.plan.shipment"].with_context(
-            active_model=pickings._name, active_ids=pickings.ids,
-        )
-        wiz = wiz_model.create({"shipment_advice_id": shipment_advice.id})
-        wiz.action_plan()
-        return wiz
-
-    def _plan_moves_in_shipment(self, shipment_advice, moves):
-        wiz_model = self.env["wizard.plan.shipment"].with_context(
-            active_model=moves._name, active_ids=moves.ids,
+            active_model=records._name, active_ids=records.ids,
         )
         wiz = wiz_model.create({"shipment_advice_id": shipment_advice.id})
         wiz.action_plan()

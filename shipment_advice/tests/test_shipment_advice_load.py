@@ -41,7 +41,7 @@ class TestShipmentAdviceLoad(Common):
 
     def test_shipment_advice_load_picking_already_planned(self):
         picking = self.move_product_out1.picking_id
-        self._plan_pickings_in_shipment(self.shipment_advice_out, picking)
+        self._plan_records_in_shipment(self.shipment_advice_out, picking)
         self._in_progress_shipment_advice(self.shipment_advice_out)
         wiz = self._load_records_in_shipment(self.shipment_advice_out, picking)
         self.assertEqual(wiz.picking_ids, picking)
@@ -96,7 +96,7 @@ class TestShipmentAdviceLoad(Common):
 
     def test_shipment_advice_load_move_line_already_planned(self):
         move = self.move_product_out1
-        self._plan_moves_in_shipment(self.shipment_advice_out, move)
+        self._plan_records_in_shipment(self.shipment_advice_out, move)
         self._in_progress_shipment_advice(self.shipment_advice_out)
         wiz = self._load_records_in_shipment(
             self.shipment_advice_out, move.move_line_ids
@@ -122,7 +122,7 @@ class TestShipmentAdviceLoad(Common):
     def test_shipment_advice_already_planned_load_move_line_not_planned(self):
         # Plan the first move
         move1 = self.move_product_out1
-        self._plan_moves_in_shipment(self.shipment_advice_out, move1)
+        self._plan_records_in_shipment(self.shipment_advice_out, move1)
         # But load something else => error
         package_level = self.move_product_out2.move_line_ids.package_level_id
         self._in_progress_shipment_advice(self.shipment_advice_out)
