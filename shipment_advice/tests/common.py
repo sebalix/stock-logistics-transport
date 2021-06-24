@@ -16,6 +16,10 @@ class Common(SavepointCase):
         cls.picking_type_out.default_location_dest_id = cls.env.ref(
             "stock.stock_location_customers"
         )
+        cls.picking_type_in = cls.env.ref("stock.picking_type_in")
+        cls.picking_type_in.default_location_src_id = cls.env.ref(
+            "stock.stock_location_suppliers"
+        )
         # Shipment
         cls.shipment_advice_in = cls.env["shipment.advice"].create(
             {"shipment_type": "incoming"}
@@ -28,10 +32,6 @@ class Common(SavepointCase):
         cls.product_out1 = cls.env.ref("product.consu_delivery_01")
         cls.product_out2 = cls.env.ref("product.consu_delivery_02")
         cls.product_out3 = cls.env.ref("product.consu_delivery_03")
-        cls.picking_type_in = cls.env.ref("stock.picking_type_in")
-        cls.picking_type_in.default_location_src_id = cls.env.ref(
-            "stock.stock_location_suppliers"
-        )
         # Stock levels
         cls._update_qty_in_location(
             cls.picking_type_out.default_location_src_id, cls.product_out1, 20,
@@ -50,7 +50,7 @@ class Common(SavepointCase):
             package=cls.package,
         )
         # Moves & transfers
-        cls.move_in = cls._create_move(cls.picking_type_in, cls.product_in, 10)
+        cls.move_product_in = cls._create_move(cls.picking_type_in, cls.product_in, 10)
         cls.group = cls.env["procurement.group"].create({})
         cls.move_product_out1 = cls._create_move(
             cls.picking_type_out, cls.product_out1, 20, cls.group

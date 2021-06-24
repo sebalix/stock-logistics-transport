@@ -241,6 +241,7 @@ class ShipmentAdvice(models.Model):
         return True
 
     def action_done(self):
+        wiz_model = self.env["stock.backorder.confirmation"]
         for shipment in self:
             if shipment.state != "in_progress":
                 raise UserError(
@@ -250,21 +251,38 @@ class ShipmentAdvice(models.Model):
                 )
             # Validate transfers (create backorders for unprocessed lines)
             if shipment.shipment_type == "incoming":
-                # TODO: mark as done all unloaded transfers and create related
-                #       back order if any line have not being processed
-                pass
+                for picking in self.planned_picking_ids:
+                    if picking.state in ("cancel", "done"):
+                        continue
+                    if picking._check_backorder():
+                        wiz = wiz_model.create({})
+                        wiz.pick_ids = picking
+                        wiz.process()
+                    else:
+                        picking.action_done()
             else:
-                # TODO
-                # If Shipment advice backorder policy = create back
-                #   order → mark as done all loaded transfers and create related
-                #   back order if any
-                # Elif leave it open
-                #   → if all move of the transfer has a qty done = reserved qty
-                #     and all package marked as done → mark as done the transfer
-                #   → If some move or package have not been processed
-                #     (qty done != reserved qty or package not marked as done)
-                #     → do nothing and leave the transfer open
-                pass
+                backorder_policy = (
+                    shipment.company_id.shipment_advice_outgoing_backorder_policy
+                )
+                if backorder_policy == "create_backorder":
+                    for picking in self.loaded_picking_ids:
+                        if picking._check_backorder():
+                            wiz = wiz_model.create({})
+                            wiz.pick_ids = picking
+                            wiz.process()
+                        else:
+                            picking.action_done()
+                else:
+                    for picking in self.loaded_picking_ids:
+                        if not picking._check_backorder():
+                            # no backorder needed means that all qty_done are
+                            # set to fullfill the need => validate
+                            picking.action_done()
+                # Unplan moves that were not loaded and validated
+                moves_to_unplan = self.loaded_move_line_ids.move_id.filtered(
+                    lambda m: m.state not in ("cancel", "done") and not m.quantity_done
+                )
+                moves_to_unplan.shipment_advice_id = False
             shipment.departure_date = fields.Datetime.now()
             shipment.state = "done"
         return True
