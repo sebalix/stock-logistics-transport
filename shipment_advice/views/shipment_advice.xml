@@ -2,6 +2,22 @@
 <!-- Copyright 2021 Camptocamp SA
      License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
 <odoo>
+    <record id="shipment_advice_view_calendar" model="ir.ui.view">
+        <field name="name">shipment.advice.calendar</field>
+        <field name="model">shipment.advice</field>
+        <field name="arch" type="xml">
+            <calendar
+                string="Shipment Advices"
+                date_start="arrival_date"
+                date_stop="departure_date"
+                mode="week"
+                color="dock_id"
+            >
+                <field name="name" />
+                <field name="state" />
+            </calendar>
+        </field>
+    </record>
     <record id="shipment_advice_view_form" model="ir.ui.view">
         <field name="name">shipment.advice.form</field>
         <field name="model">shipment.advice</field>
@@ -227,11 +243,68 @@
             </tree>
         </field>
     </record>
+    <record id="shipment_advice_view_search" model="ir.ui.view">
+        <field name="name">shipment.advice.search</field>
+        <field name="model">shipment.advice</field>
+        <field name="type">search</field>
+        <field name="arch" type="xml">
+            <search string="Shipment Advices">
+                <field name="name" />
+                <field name="ref" />
+                <filter
+                    name="incoming"
+                    string="Incoming"
+                    domain="[('shipment_type', '=', 'incoming')]"
+                />
+                <filter
+                    name="outgoing"
+                    string="Outgoing"
+                    domain="[('shipment_type', '=', 'outgoing')]"
+                />
+                <group expand="0" string="Group By">
+                    <filter
+                        string="Loading dock"
+                        name="dock_id"
+                        domain="[]"
+                        context="{'group_by': 'dock_id'}"
+                    />
+                    <filter
+                        string="Status"
+                        name="status"
+                        domain="[]"
+                        context="{'group_by': 'state'}"
+                    />
+                    <filter
+                        string="Warehouse"
+                        name="warehouse"
+                        domain="[]"
+                        context="{'group_by': 'warehouse_id'}"
+                    />
+                </group>
+            </search>
+        </field>
+    </record>
     <record id="shipment_advice_action" model="ir.actions.act_window">
         <field name="name">Shipment Advices</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">shipment.advice</field>
         <field name="view_id" ref="shipment_advice_view_tree" />
+        <field name="view_mode">calendar,tree,form</field>
+    </record>
+    <record
+        id="shipment_advice_action_view_calendar"
+        model="ir.actions.act_window.view"
+    >
+        <field name="sequence" eval="1" />
+        <field name="view_mode">calendar</field>
+        <field name="view_id" ref="shipment_advice_view_calendar" />
+        <field name="act_window_id" ref="shipment_advice_action" />
+    </record>
+    <record id="shipment_advice_action_view_tree" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2" />
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="shipment_advice_view_tree" />
+        <field name="act_window_id" ref="shipment_advice_action" />
     </record>
     <menuitem
         id="shipment_advice_menu"
