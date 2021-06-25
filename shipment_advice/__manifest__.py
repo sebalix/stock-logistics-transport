@@ -23,6 +23,8 @@
         "wizards/unplan_shipment.xml",
         "wizards/load_shipment.xml",
         "wizards/unload_shipment.xml",
+        "report/reports.xml",
+        "report/report_shipment_advice.xml",
     ],
     "demo": ["demo/stock_dock.xml"],
     "license": "AGPL-3",
