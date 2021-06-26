@@ -96,6 +96,21 @@
             </tree>
         </field>
     </record>
+    <record id="stock_picking_loading_progress_view_tree" model="ir.ui.view">
+        <field name="name">stock.picking.loading.progress.tree</field>
+        <field name="model">stock.picking</field>
+        <field name="priority" eval="110" />
+        <field name="arch" type="xml">
+            <tree string="Transfers" create="0">
+                <field name="name" />
+                <field name="picking_type_code" invisible="1" />
+                <field name="loaded_packages_progress" />
+                <field name="loaded_move_lines_progress" />
+                <field name="loaded_weight_progress" />
+                <field name="state" />
+            </tree>
+        </field>
+    </record>
     <record id="wizard_plan_shipment_picking_action" model="ir.actions.act_window">
         <field name="name">Plan in shipment</field>
         <field name="type">ir.actions.act_window</field>

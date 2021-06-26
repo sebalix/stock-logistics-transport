@@ -365,5 +365,21 @@ class ShipmentAdvice(models.Model):
         return action
 
     def button_open_deliveries_in_progress(self):
-        # TODO
-        pass
+        action = self.env.ref("stock.action_picking_tree_all").read()[0]
+        view_tree = self.env.ref(
+            "shipment_advice.stock_picking_loading_progress_view_tree"
+        )
+        tree_view_index = action["views"].index((False, "tree"))
+        action["views"][tree_view_index] = (view_tree.id, "tree")
+        action["domain"] = [("id", "in", self.loaded_picking_ids.ids)]
+        return action
+
+    def button_open_receptions_in_progress(self):
+        action = self.env.ref("stock.action_picking_tree_all").read()[0]
+        view_tree = self.env.ref(
+            "shipment_advice.stock_picking_loading_progress_view_tree"
+        )
+        tree_view_index = action["views"].index((False, "tree"))
+        action["views"][tree_view_index] = (view_tree.id, "tree")
+        action["domain"] = [("id", "in", self.planned_picking_ids.ids)]
+        return action

@@ -144,7 +144,15 @@
                             class="oe_stat_button"
                             icon="fa-tasks"
                             states="in_progress"
-                            attrs="{'invisible': ['|', ('shipment_type', '!=', 'outgoing'), ('loaded_picking_ids', '=', [])]}"
+                            attrs="{'invisible': ['|', '|', ('shipment_type', '!=', 'outgoing'), ('loaded_picking_ids', '=', []), ('state', '!=', 'in_progress')]}"
+                        />
+                        <button
+                            name="button_open_receptions_in_progress"
+                            type="object"
+                            string="Unloading Progress"
+                            class="oe_stat_button"
+                            icon="fa-tasks"
+                            attrs="{'invisible': ['|', '|', ('shipment_type', '!=', 'incoming'), ('planned_picking_ids', '=', []), ('state', '!=', 'in_progress')]}"
                         />
                     </div>
                     <h1>

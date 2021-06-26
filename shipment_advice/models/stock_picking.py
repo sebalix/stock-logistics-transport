@@ -13,9 +13,17 @@ class StockPicking(models.Model):
         store=True,
         index=True,
     )
-
     is_loaded_in_shipment = fields.Boolean(
         string="Is loaded in a shipment?", compute="_compute_is_loaded_in_shipment",
+    )
+    loaded_packages_progress = fields.Char(
+        "Packages loaded/total", compute="_compute_shipment_count"
+    )
+    loaded_move_lines_progress = fields.Char(
+        "Lines loaded/total", compute="_compute_shipment_count"
+    )
+    loaded_weight_progress = fields.Char(
+        "Weight/total", compute="_compute_shipment_count"
     )
 
     @api.depends("move_line_ids.shipment_advice_id")
@@ -24,6 +32,53 @@ class StockPicking(models.Model):
             picking.is_loaded_in_shipment = all(
                 line.shipment_advice_id for line in picking.move_line_ids
             )
+
+    @api.depends("package_level_ids.package_id")
+    def _compute_shipment_count(self):
+        for picking in self:
+            picking.loaded_packages_progress = ""
+            picking.loaded_move_lines_progress = ""
+            picking.loaded_weight_progress = ""
+            total_packages_count = len(picking.package_level_ids.package_id)
+            total_move_lines_count = len(picking.move_line_ids)
+            # Packages loading progress
+            if total_packages_count:
+                loaded_packages_count = len(
+                    [pl for pl in picking.package_level_ids if pl.shipment_advice_id]
+                )
+                picking.loaded_packages_progress = (
+                    f"{loaded_packages_count}/{total_packages_count}"
+                )
+            # Lines loading progress
+            if total_move_lines_count:
+                loaded_move_lines_count = len(
+                    [
+                        ml
+                        for ml in picking.move_line_ids_without_package
+                        if ml.shipment_advice_id
+                    ]
+                )
+                picking.loaded_move_lines_progress = (
+                    f"{loaded_move_lines_count}/{total_move_lines_count}"
+                )
+            # Weight/total
+            if picking.shipping_weight:
+                loaded_weight = sum(
+                    [
+                        ml.result_package_id.shipping_weight or ml.move_id.weight
+                        for ml in picking.move_line_ids_without_package
+                        if ml.shipment_advice_id
+                    ]
+                ) + sum(
+                    [
+                        pl.package_id.shipping_weight
+                        for pl in picking.package_level_ids
+                        if pl.shipment_advice_id
+                    ]
+                )
+                picking.loaded_weight_progress = (
+                    f"{loaded_weight}/{picking.shipping_weight}"
+                )
 
     def button_load_in_shipment(self):
         action = self.env.ref(
